@@ -1,0 +1,7 @@
+{
+  "name": "human-design-bodygraph-skill",
+  "private": true,
+  "description": "Scripts for the human-design-bodygraph skill. No dependencies; needs Node.js 18 or later.",
+  "type": "commonjs",
+  "license": "MIT"
+}

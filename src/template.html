@@ -1,0 +1,858 @@
+<meta charset="utf-8">
+<title>Human Design Bodygraph</title>
+<style>
+/*FONTS*/
+/* Layout: form on top; Design column | bodygraph | Personality column, like a printed chart; summary, reading below. */
+/* Page colours: warm white, cream and ink, light theme only.
+   Chart colours are the standard Human Design ones: yellow head and G, green ajna, brown throat,
+   spleen, solar plexus and root, red heart and sacral; Design in red, Personality in black.
+   Soft pink is used only for light effects. */
+:root {
+  --bg: #fffdfb;          /* warm white */
+  --surface: #f7f3ef;     /* cream */
+  --fg: #2b2422;          /* ink */
+  --muted: #69615d;       /* grey */
+  --line: rgb(43 36 34 / 0.22);
+  --track: #efe8e2;
+  --personality: #111111; /* Personality: black */
+  --design: #c8102e;      /* Design: red */
+  --logo: #deb5a6;        /* soft pink: light, sparks, aura */
+  --c-yellow: #f2cc4b;    /* head, G */
+  --c-green: #5fa35a;     /* ajna */
+  --c-brown: #a8733f;     /* throat, spleen, solar plexus, root */
+  --c-red: #d2453b;       /* heart, sacral */
+  --font-display: "GT Super Display", "GT Super", "Fraunces", Georgia, serif;   /* GT Super where installed, else Fraunces (free) */
+  --font-body: "Aeonik", "Geist", system-ui, sans-serif;   /* Aeonik where installed, else Geist (free) */
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--fg); font: 400 16px/1.6 var(--font-body); font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 48px; display: grid; gap: 28px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+h1 { font: 300 clamp(34px, 4.4vw, 58px)/1.02 var(--font-display); margin: 0; text-wrap: balance; letter-spacing: -.025em; }
+
+/* Form */
+form { display: flex; flex-wrap: wrap; gap: 12px; align-items: start; }
+.field { display: grid; gap: 5px; flex: 1 1 150px; min-width: 0; }
+.field.place { flex: 3 1 280px; position: relative; }
+.field.tz { flex: 1 1 170px; }
+label { font: 500 13px/1 var(--font-body); letter-spacing: .16em; text-transform: uppercase; color: var(--fg); }
+input { font: 15px var(--font-body); color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 9px 11px; width: 100%; }
+input:focus-visible, button:focus-visible { outline: 2px solid var(--design); outline-offset: 2px; }
+.gate:focus { outline: none; }
+.gate:focus-visible circle { stroke: var(--design); stroke-width: 1.5; }
+.hint, .check label { font: 400 13px/1.35 var(--font-body); color: var(--muted); letter-spacing: 0; text-transform: none; margin: 0; }
+.check { display: flex; gap: 6px; align-items: center; }
+.check input { width: auto; margin: 0; }
+#placelist {
+  position: absolute; top: 66px; left: 0; right: 0; z-index: 5; margin: 0; padding: 4px; list-style: none;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 10px 28px rgb(43 36 34 / .12);
+}
+#placelist li { padding: 8px 10px; border-radius: 4px; cursor: pointer; display: grid; gap: 1px; }
+#placelist li small { color: var(--muted); font-size: 12px; }
+#placelist li[aria-selected="true"], #placelist li:hover { background: var(--surface); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+button {
+  font: 400 13px var(--font-body); letter-spacing: .16em; text-transform: uppercase; cursor: pointer; border-radius: 6px; padding: 10px 18px;
+  background: var(--fg); color: var(--bg); border: 1px solid var(--fg);
+}
+button.ghost { background: transparent; color: var(--fg); border-color: var(--line); }
+@media (hover: hover) and (pointer: fine) { button:hover { background: #94604f; border-color: #94604f; color: var(--bg); } }
+.error { color: var(--design); font-size: 14px; margin: 0; }
+.start { font-size: 15px; }
+
+/* Chart */
+.chart { display: grid; grid-template-columns: 170px minmax(0, 1fr) 170px; gap: 16px; align-items: start; }
+.col { display: grid; gap: 2px; padding-top: 18px; }
+.col h2 { font: 300 26px/1.04 var(--font-display); letter-spacing: -.02em; margin: 0; }
+.col .when { font-size: 12px; line-height: 1.4; color: var(--muted); margin-bottom: 10px; }
+.col.design h2, .col.design .act { color: var(--design); }
+.col.personality { text-align: right; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--track); }
+.col.personality .row { flex-direction: row-reverse; }
+.glyph { font-size: 17px; line-height: 1; width: 1.3em; text-align: center; }
+.row .name { font-size: 13px; color: var(--muted); flex: 1; line-height: 1.25; }
+.row .name small { display: block; font-size: 11px; opacity: .85; }
+.act { font-weight: 500; font-size: 16px; }
+.graph { width: 100%; max-width: 470px; justify-self: center; display: grid; gap: 10px; }
+.graph svg { display: block; width: 100%; height: auto; overflow: visible; }
+.info { font-size: 14px; line-height: 1.5; color: var(--muted); min-height: 4.5em; padding: 10px 12px; border-radius: 6px; background: var(--surface); }
+.info strong { color: var(--fg); font-weight: 500; }
+
+/* Summary and reading */
+.reading { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 18px 24px; border-top: 1px solid var(--line); padding-top: 20px; margin: 0; }
+.reading div { display: grid; gap: 4px; min-width: 0; align-content: start; }
+.reading .ch { white-space: nowrap; }
+.reading dt { font: 500 13px/1 var(--font-body); letter-spacing: .16em; text-transform: uppercase; }
+.reading dd { margin: 0; font: 300 26px/1.1 var(--font-display); letter-spacing: -.02em; }
+.reading dd small { display: block; font: 400 15px/1.5 var(--font-body); letter-spacing: 0; color: var(--muted); margin-top: 2px; }
+.stability { font-size: 15px; margin: 0; padding: 12px 14px; border-radius: 6px; background: var(--surface); max-width: 75ch; }
+.stability strong { font-weight: 500; }
+.readout { display: grid; gap: 22px; max-width: 40em; }
+.readout > h2 { font: 300 clamp(30px, 3vw, 40px)/1.04 var(--font-display); letter-spacing: -.025em; margin: 0; }
+#readbody { display: grid; gap: 22px; }
+#readbody section { display: grid; gap: 6px; }
+#readbody h3 { font: 300 22px/1.2 var(--font-display); letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+h1, .col h2, .reading dd, .readout > h2, #readbody h3 { font-variation-settings: "SOFT" 0, "WONK" 0; }   /* Fraunces: crisp, no soft or wonky forms */
+#readbody p { margin: 0; text-wrap: pretty; }
+#readbody p.what { font-size: 14px; color: var(--muted); font-style: italic; }
+.deeper { display: grid; gap: 22px; }
+.deeper > summary, .advanced summary { cursor: pointer; font: 500 13px/1.6 var(--font-body); letter-spacing: .16em; text-transform: uppercase; }
+.deeper[open] > summary { margin-bottom: 4px; }
+.advanced { max-width: 40em; font-size: 15px; }
+.advanced summary { cursor: pointer; font: 500 13px/1.6 var(--font-body); letter-spacing: .16em; text-transform: uppercase; }
+.advanced p, .advanced ul { margin: 8px 0 0; }
+.advanced ul { padding-left: 18px; }
+#readbody ul { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+#readbody li { padding-left: 18px; position: relative; text-wrap: pretty; }
+@media (min-width: 640px) { #readbody ul.two { columns: 2; column-gap: 28px; } #readbody ul.two li { break-inside: avoid; margin-bottom: 4px; } }
+#readbody li::before { content: ""; position: absolute; left: 2px; top: .68em; width: 6px; height: 6px; border-radius: 50%; background: var(--logo); }
+.sources, .note { font-size: 13px; color: var(--muted); margin: 0; max-width: 70ch; }
+.sources a { color: #94604f; }
+
+/* Bodygraph */
+.aura { opacity: .35; }
+.center { stroke: var(--fg); stroke-opacity: .6; stroke-width: 1; fill: var(--bg); stroke-linejoin: round; cursor: pointer; }
+.tube-out { stroke: var(--fg); stroke-opacity: .45; stroke-width: 7.4; fill: none; }
+.tube-in { stroke: var(--bg); stroke-width: 5.6; fill: none; }
+.hit { stroke: transparent; stroke-width: 12; fill: none; pointer-events: stroke; cursor: pointer; }
+.names text { font: 400 8px var(--font-body); fill: var(--muted); text-anchor: middle; dominant-baseline: central; letter-spacing: .04em; pointer-events: none; }
+.half { stroke-width: 5.6; fill: none; pointer-events: none; }
+.half.p { stroke: var(--personality); }
+.half.d { stroke: var(--design); }
+.half.pd { stroke: var(--personality); stroke-dasharray: 3.5 3.5; }
+.gate, .center, .ripple, .cgroup, .seed, .aura, .tube-out, .tube-in { transform-box: fill-box; transform-origin: center; }
+.gate { cursor: pointer; }
+.gate circle { fill: var(--bg); }
+.gate text { font: 400 6.8px var(--font-body); fill: var(--muted); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.gate.on circle { fill: var(--personality); }
+.gate.on text { fill: var(--bg); }
+.ripple { fill: none; stroke-width: 1; pointer-events: none; }
+.ripple-c { stroke: var(--logo); stroke-width: 1.5; }
+.spark, .seed { fill: var(--logo); filter: drop-shadow(0 0 3px var(--logo)); pointer-events: none; }
+.sweep, .trace { fill: none; stroke: var(--logo); stroke-linecap: round; filter: drop-shadow(0 0 3px var(--logo)); pointer-events: none; }
+.sweep { stroke-width: 3.4; }
+.trace { stroke-width: 2; }
+.center.def-head, .center.def-g { fill: var(--c-yellow); }
+.center.def-ajna { fill: var(--c-green); }
+.center.def-throat, .center.def-spleen, .center.def-solar, .center.def-root { fill: var(--c-brown); }
+.center.def-heart, .center.def-sacral { fill: var(--c-red); }
+.selected { stroke: var(--design); stroke-width: 2; stroke-opacity: 1; }
+
+@media (max-width: 760px) {
+  .chart { grid-template-columns: 1fr 1fr; }
+  .graph { grid-column: 1 / -1; grid-row: 1; margin-inline: -20px; width: calc(100% + 40px); max-width: none; }
+  .info { margin-inline: 20px; }
+  .col { padding-top: 0; }
+  .gate text { font-size: 9.6px; }   /* at least 10px on a 360px screen */
+  .gate circle { r: 6.4px; }
+  .names text { font-size: 9px; }
+}
+</style>
+
+<div class="wrap">
+  <header><h1>Human Design Bodygraph</h1></header>
+
+  <form id="form" novalidate>
+    <div class="field"><label for="date">Birth date</label><input id="date" type="date" required min="1801-01-01" max="2199-12-31" value="1988-03-21"></div>
+    <div class="field"><label for="time">Birth time</label><input id="time" type="time" required value="08:15">
+      <span class="check"><input id="isutc" type="checkbox"><label for="isutc">Time is already in UTC</label></span></div>
+    <div class="field place"><label for="place">Birth address</label>
+      <input id="place" value="Amsterdam, Netherlands" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="placelist" aria-autocomplete="list" placeholder="Street and number, town">
+      <ul id="placelist" role="listbox" hidden></ul>
+      <p class="hint" id="placeinfo">Start typing the address and pick it from the list. The time zone follows from it.</p>
+    </div>
+    <div class="field tz"><label for="tz">Time zone</label><input id="tz" list="tzlist" required value="Europe/Amsterdam" autocomplete="off"><datalist id="tzlist"></datalist></div>
+    <div class="actions">
+      <button type="submit">Calculate chart</button>
+      <button type="button" class="ghost" id="replay" hidden>Replay</button>
+      <button type="button" class="ghost" id="skip" hidden>Skip animation</button>
+      <button type="button" class="ghost" id="save" hidden>Save as image</button>
+    </div>
+  </form>
+  <p class="error" id="error" hidden></p>
+
+  <p class="hint start" id="start">Enter a birth date, time and place, then press Calculate chart.</p>
+  <section class="chart" id="chart" aria-label="Bodygraph" hidden>
+    <div class="col design"><h2>Design</h2><div class="when" id="dwhen"></div><div id="dlist"></div></div>
+    <div class="graph">
+      <svg id="svg" viewBox="30 6 340 620" role="img" aria-label="Bodygraph"></svg>
+      <p class="info" id="info" aria-live="polite">Tap or hover over a center, gate or channel to see what it means.</p>
+    </div>
+    <div class="col personality"><h2>Personality</h2><div class="when" id="pwhen"></div><div id="plist"></div></div>
+  </section>
+
+  <dl class="reading" id="reading" hidden></dl>
+  <p class="stability" id="stability" aria-live="polite" hidden>Checking how sensitive this chart is to the birth time…</p>
+
+  <section class="readout" id="readout" aria-labelledby="readtitle" hidden>
+    <h2 id="readtitle">Your reading</h2>
+    <div id="readbody"></div>
+    <p class="sources">Human Design is a reflective framework, not a scientific test. Use this reading as a starting point; a trained analyst can go deeper. Meanings summarised in our own words from
+      <a href="https://jovianarchive.com/pages/what-is-human-design" target="_blank" rel="noopener">Jovian Archive</a>,
+      <a href="https://www.geneticmatrix.com/learn-hub/types/index.html" target="_blank" rel="noopener">Genetic Matrix</a>,
+      <a href="https://www.mybodygraph.com/blog/the-nine-centers-of-the-bodygraph" target="_blank" rel="noopener">myBodyGraph</a>,
+      <a href="https://www.hdtasks.humandesignamerica.com/books/reference-books/item/15-incarnation-crosses-the-global-incarnation-index" target="_blank" rel="noopener">Human Design America</a> and
+      <a href="https://www.ihdschool.com/digital-products/categories/101/channels-by-type" target="_blank" rel="noopener">IHDS</a>.
+      Human Design is a trademark of Jovian Archive; this page is independent and not affiliated.</p>
+  </section>
+  <details class="advanced" id="advanced" hidden>
+    <summary>Advanced: Variables</summary>
+    <p>Variables are four arrows that come from the finest detail of your Sun and Moon nodes. Jovian Archive teaches them only after you have lived by your Strategy and Authority for a while, and they need a birth time that is exact to the minute.</p>
+    <ul></ul>
+  </details>
+  <p class="note" id="note" hidden>Planet positions match Swiss Ephemeris, the reference most Human Design software uses (based on NASA JPL data), to within one arcsecond: in a test of 10,000 random births, 2 charts differed by one line. The chart logic is checked against independent Human Design programs and against published charts. A birth within a minute of a line boundary can still differ between programs, so an exact birth time matters. Addresses come from OpenStreetMap (Photon), towns from GeoNames (CC BY 4.0); the time zone follows from the exact location.</p>
+</div>
+
+<script>
+/*ASTRONOMIA*/
+/*EPHDATA*/
+/*EPHEMERIS*/
+/*DATA*/
+/*TZ*/
+/*CORE*/
+/*INTERPRET*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('svg');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = (id) => document.getElementById(id);
+  const EPH = createEphemeris(Astronomia, HD_EPH);
+
+  // Bodygraph geometry. Centers are corner points, drawn with rounded corners;
+  // channels are outlined tubes, the long ones curving around the outside.
+  const SHAPES = {
+    head:   [[200, 18], [238, 88], [162, 88]],
+    ajna:   [[162, 104], [238, 104], [200, 172]],
+    throat: [[166, 196], [234, 196], [234, 268], [166, 268]],
+    g:      [[200, 300], [245, 345], [200, 390], [155, 345]],
+    heart:  [[300, 372], [328, 424], [250, 424]],
+    spleen: [[46, 434], [124, 480], [46, 526]],
+    solar:  [[354, 434], [276, 480], [354, 526]],
+    sacral: [[164, 440], [236, 440], [236, 512], [164, 512]],
+    root:   [[164, 548], [236, 548], [236, 618], [164, 618]],
+  };
+  const RADIUS = { head: 7, ajna: 7, throat: 9, g: 8, heart: 6, spleen: 8, solar: 8, sacral: 9, root: 9 };
+  const NAME_POS = {
+    head: [200, 62, 'head'], ajna: [200, 124, 'ajna'], throat: [200, 234, 'throat'], g: [200, 347, 'G'],
+    heart: [289, 416, 'heart'], spleen: [68, 482, 'spleen'], solar: [332, 477, 'solar', 'plexus'],
+    sacral: [200, 478, 'sacral'], root: [200, 585, 'root'],
+  };
+  const CENTER_THEME = HDRead.CENTER_THEME;
+  const CENTROID = {};
+  for (const [c, pts] of Object.entries(SHAPES)) {
+    CENTROID[c] = [pts.reduce((s, p) => s + p[0], 0) / pts.length, pts.reduce((s, p) => s + p[1], 0) / pts.length];
+  }
+  const GATE_POS = {
+    64: [182, 88], 61: [200, 88], 63: [218, 88],
+    47: [182, 104], 24: [200, 104], 4: [218, 104], 17: [185.6, 146], 43: [200, 169], 11: [214.4, 146],
+    62: [182, 196], 23: [200, 196], 56: [218, 196], 16: [166, 212], 20: [166, 246],
+    35: [234, 208], 12: [234, 226], 45: [234, 246], 31: [182, 268], 8: [200, 268], 33: [218, 268],
+    7: [184.3, 315.8], 1: [200, 302], 13: [215.7, 315.8], 10: [157, 345], 25: [243, 345],
+    15: [184.3, 374.3], 2: [200, 388], 46: [215.7, 374.3],
+    21: [299, 376], 51: [275, 398], 26: [262, 424], 40: [316, 424],
+    48: [60, 442.3], 57: [81.1, 454.7], 44: [102.2, 467.1], 50: [122, 480], 32: [102.2, 492.9], 28: [81.1, 505.3], 18: [60, 517.7],
+    36: [340, 442.3], 22: [318.9, 454.7], 37: [297.8, 467.1], 6: [278, 480], 49: [297.8, 492.9], 55: [318.9, 505.3], 30: [340, 517.7],
+    5: [182, 440], 14: [200, 440], 29: [218, 440], 34: [164, 456], 27: [164, 492], 59: [236, 480],
+    42: [182, 512], 3: [200, 512], 9: [218, 512],
+    53: [182, 548], 60: [200, 548], 52: [218, 548], 54: [164, 566], 38: [164, 584], 58: [164, 602],
+    19: [236, 566], 39: [236, 584], 41: [236, 602],
+  };
+  // Cubic control points for curved channels, keyed in HD.CHANNELS order; the rest are straight.
+  const CURVES = {
+    '16-48': [[100, 214], [50, 330]], '20-57': [[118, 250], [76, 362]], '20-34': [[138, 300], [132, 420]],
+    '20-10': [[162, 280], [156, 318]], '10-34': [[148, 385], [146, 432]], '10-57': [[126, 376], [96, 420]],
+    '45-21': [[272, 262], [302, 330]], '35-36': [[300, 212], [350, 330]], '12-22': [[282, 232], [324, 362]],
+    '26-44': [[212, 418], [148, 444]], '57-34': [[110, 450], [140, 452]],
+    '32-54': [[118, 528], [138, 562]], '28-38': [[96, 550], [128, 582]], '18-58': [[70, 572], [116, 602]],
+    '19-49': [[262, 562], [282, 528]], '39-55': [[272, 582], [304, 550]], '41-30': [[284, 602], [330, 572]],
+  };
+  const GLYPH = {
+    Sun: '☉', Earth: '⊕', NorthNode: '☊', SouthNode: '☋', Moon: '☽',
+    Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃', Saturn: '♄',
+    Uranus: '♅', Neptune: '♆', Pluto: '♇',
+  };
+  const LABEL = { NorthNode: 'North Node', SouthNode: 'South Node' };
+
+  const el = (name, attrs, parent) => {
+    const n = document.createElementNS(NS, name);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  };
+
+  // Split a polyline at half its length; returns [firstHalf, secondHalfReversed] point lists.
+  function halves(pts) {
+    const seg = [];
+    let total = 0;
+    for (let i = 1; i < pts.length; i++) {
+      const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+      seg.push(l); total += l;
+    }
+    let acc = 0;
+    for (let i = 0; i < seg.length; i++) {
+      if (acc + seg[i] >= total / 2) {
+        const f = (total / 2 - acc) / seg[i];
+        const mid = [pts[i][0] + (pts[i + 1][0] - pts[i][0]) * f, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * f];
+        return [[...pts.slice(0, i + 1), mid], [...pts.slice(i + 1).reverse(), mid]];
+      }
+      acc += seg[i];
+    }
+  }
+  const d = (pts) => 'M' + pts.map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L');
+
+  // Rounded polygon: cut each corner by r and curve through it.
+  function rounded(pts, r) {
+    const n = pts.length;
+    let out = '';
+    for (let i = 0; i < n; i++) {
+      const p = pts[i], prev = pts[(i + n - 1) % n], next = pts[(i + 1) % n];
+      const u = (q) => { const l = Math.hypot(q[0] - p[0], q[1] - p[1]); return [(q[0] - p[0]) / l, (q[1] - p[1]) / l]; };
+      const a = u(prev), b = u(next);
+      out += (i ? ' L' : 'M') + (p[0] + a[0] * r).toFixed(1) + ' ' + (p[1] + a[1] * r).toFixed(1) +
+        ' Q' + p[0] + ' ' + p[1] + ' ' + (p[0] + b[0] * r).toFixed(1) + ' ' + (p[1] + b[1] * r).toFixed(1);
+    }
+    return out + ' Z';
+  }
+
+  // Static skeleton, built once: aura, tube outlines and insides, hit areas, halves, effects, centers, ripples.
+  const defs = el('defs', {}, svg);
+  const grad = el('radialGradient', { id: 'aura' }, defs);
+  el('stop', { offset: '0', 'stop-color': '#deb5a6', 'stop-opacity': '0.55' }, grad);
+  el('stop', { offset: '0.55', 'stop-color': '#deb5a6', 'stop-opacity': '0.16' }, grad);
+  el('stop', { offset: '1', 'stop-color': '#deb5a6', 'stop-opacity': '0' }, grad);
+  const aura = el('ellipse', { class: 'aura', cx: 200, cy: 330, rx: 230, ry: 330, fill: 'url(#aura)' }, svg);
+  const gTubes = el('g', {}, svg);
+  const gTubeOut = el('g', {}, gTubes);
+  const gTubeIn = el('g', {}, gTubes);
+  const gHit = el('g', {}, svg);
+  const gHalves = el('g', {}, svg);
+  const gFx = el('g', {}, svg);       // sparks, traces and light sweeps, under the centers
+  const gCenters = el('g', { class: 'names' }, svg);
+  const gRipple = el('g', {}, svg);   // ripples around gates and centers
+  const groupEl = {}, centerEl = {}, gateEl = {}, gateXY = {}, halfPath = {};
+  const channelEls = [];
+
+  for (const [a, b] of HD.CHANNELS) {
+    const [x1, y1] = GATE_POS[a], [x2, y2] = GATE_POS[b];
+    const cv = CURVES[a + '-' + b];
+    const path = 'M' + x1 + ' ' + y1 + (cv ? ' C' + cv[0].join(' ') + ' ' + cv[1].join(' ') + ' ' : ' L') + x2 + ' ' + y2;
+    const outer = el('path', { class: 'tube-out', d: path }, gTubeOut);
+    const inner = el('path', { class: 'tube-in', d: path }, gTubeIn);
+    el('path', { class: 'hit', d: path, 'data-channel': HD.channelKey(a, b) }, gHit);
+    // Sample the curve with plain maths: the chart is hidden at this point, so the browser cannot measure it.
+    const P = cv ? [[x1, y1], cv[0], cv[1], [x2, y2]] : [[x1, y1], [x1, y1], [x2, y2], [x2, y2]];
+    const at = (t) => { const u = 1 - t; return [0, 1].map((k) => u * u * u * P[0][k] + 3 * u * u * t * P[1][k] + 3 * u * t * t * P[2][k] + t * t * t * P[3][k]); };
+    const pts = [];
+    for (let i = 0; i <= 40; i++) pts.push(at(i / 40));
+    let L = 0;
+    for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    channelEls.push({ a, b, path, L, out: outer, inn: inner });
+    const [ha, hb] = halves(pts);
+    (halfPath[a] = halfPath[a] || []).push(ha);
+    (halfPath[b] = halfPath[b] || []).push(hb);
+  }
+  for (const [c, pts] of Object.entries(SHAPES)) {
+    groupEl[c] = el('g', { class: 'cgroup', 'data-center': c }, gCenters);
+    centerEl[c] = el('path', { class: 'center', d: rounded(pts, RADIUS[c]) }, groupEl[c]);
+    const [x, y, ...lines] = NAME_POS[c];
+    const t = el('text', { x, y: y - (lines.length - 1) * 4.5 }, groupEl[c]);
+    lines.forEach((line, i) => { el('tspan', { x, dy: i ? 9 : 0 }, t).textContent = line; });
+  }
+  for (const [gate, [x, y]] of Object.entries(GATE_POS)) {
+    const [cx, cy] = CENTROID[HD.GATE_CENTER[gate]];
+    const len = Math.hypot(cx - x, cy - y) || 1;
+    const k = Math.min(9, len * 0.45);
+    const lx = x + (cx - x) / len * k, ly = y + (cy - y) / len * k;
+    const g = el('g', { class: 'gate', 'data-gate': gate, tabindex: 0, role: 'button', 'aria-label': 'Gate ' + gate + ', ' + HD.GATE_NAMES[gate] }, groupEl[HD.GATE_CENTER[gate]]);
+    el('circle', { cx: lx, cy: ly, r: 5 }, g);
+    el('text', { x: lx, y: ly }, g).textContent = gate;
+    gateXY[gate] = [lx, ly];
+    gateEl[gate] = g;
+  }
+
+  // Time zone suggestions.
+  try {
+    const list = $('tzlist');
+    for (const z of Intl.supportedValuesOf('timeZone')) { const o = document.createElement('option'); o.value = z; list.appendChild(o); }
+  } catch (e) { /* older browsers: free text still works */ }
+
+  const SOFT = 'cubic-bezier(0.22, 1, 0.36, 1)';       // soft ease-out: things emerging
+  const EASE = 'cubic-bezier(0.23, 1, 0.32, 1)';       // strong ease-out: things arriving
+  const EASE_MOVE = 'cubic-bezier(0.77, 0, 0.175, 1)'; // strong ease-in-out: things travelling
+  let running = [];
+  const anim = (node, frames, opts) => {
+    if (reduce) return;
+    running.push(node.animate(frames, { fill: 'backwards', easing: EASE, ...opts }));
+  };
+  // One-off effect elements: invisible outside their animation, removed after.
+  const fx = (node, frames, opts) => {
+    if (reduce) { node.remove(); return; }
+    node.style.opacity = 0;
+    const a = node.animate(frames, { easing: EASE, ...opts, fill: 'none' });
+    running.push(a);
+    a.onfinish = () => node.remove();
+  };
+  const sample = (pts, n) => {
+    const out = [];
+    for (let i = 0; i < n; i++) out.push(pts[Math.round(i * (pts.length - 1) / (n - 1))]);
+    return out;
+  };
+  const fmtUtc = (dt) => dt.toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+  const list = (xs) => xs.length < 2 ? xs.join('') : xs.slice(0, -1).join(', ') + ' and ' + xs[xs.length - 1];
+
+  let skipTimer;
+  function render(chart) {
+    running.forEach((a) => a.cancel());
+    running = [];
+    gHalves.textContent = ''; gFx.textContent = ''; gRipple.textContent = '';
+    for (const c in centerEl) centerEl[c].setAttribute('class', 'center');
+    for (const g in gateEl) gateEl[g].setAttribute('class', 'gate');
+    current = chart;
+    showInfo(null);
+
+    // 1. Approach: an aura blooms from the empty page and a seed of light opens at the G center.
+    //    Every part then starts small and faint, far back, and comes toward the viewer until it
+    //    reaches full size: centers first (nearest the G first), then the channels between them,
+    //    each traced once by light as it arrives.
+    const [gx0, gy0] = CENTROID.g;
+    anim(aura, [{ opacity: 0, transform: 'scale(0.4)' }, { opacity: 1, offset: 0.45 }, { opacity: 0.35, transform: 'scale(1)' }],
+      { duration: 3600, easing: SOFT });
+    fx(el('circle', { class: 'seed', cx: gx0, cy: gy0, r: 6 }, gFx),
+      [{ opacity: 0, transform: 'scale(0.2)' }, { opacity: 1, offset: 0.3 }, { opacity: 0, transform: 'scale(7)' }], { duration: 1800, delay: 150, easing: SOFT });
+    const emerged = {};
+    for (const c of Object.keys(groupEl)) {
+      const dist = Math.hypot(CENTROID[c][0] - gx0, CENTROID[c][1] - gy0);
+      const delay = 400 + dist * 2.4, dur = 2000;
+      anim(groupEl[c], [
+        { opacity: 0, filter: 'blur(4px)', transform: 'scale(0.18)' },
+        { opacity: 0.85, filter: 'blur(1.5px)', offset: 0.4 },
+        { opacity: 1, filter: 'blur(0px)', transform: 'scale(1)' },
+      ], { duration: dur, delay, easing: SOFT });
+      emerged[c] = delay + dur * 0.55;
+      groupEl[c].querySelectorAll('.gate').forEach((g) => {
+        anim(g, [{ opacity: 0 }, { opacity: 0.9, offset: 0.35 }, { opacity: 0.35, offset: 0.6 }, { opacity: 1 }],
+          { duration: 1100, delay: delay + 700 + Math.random() * 500, easing: 'ease-in-out' });
+      });
+    }
+    let built = 0;
+    for (const ch of channelEls) {
+      const delay = Math.max(emerged[HD.GATE_CENTER[ch.a]], emerged[HD.GATE_CENTER[ch.b]]) + Math.random() * 200;
+      for (const node of [ch.out, ch.inn]) {
+        anim(node, [
+          { opacity: 0, transform: 'scale(0.3)' },
+          { opacity: 1, offset: 0.45 },
+          { opacity: 1, transform: 'scale(1)' },
+        ], { duration: 1600, delay, easing: SOFT });
+      }
+      fx(el('path', { class: 'trace', d: ch.path, 'stroke-dasharray': ch.L + ' ' + ch.L }, gFx), [
+        { strokeDashoffset: ch.L, opacity: 0 }, { opacity: 0.9, offset: 0.2 }, { strokeDashoffset: 0, opacity: 0.9, offset: 0.7 }, { strokeDashoffset: 0, opacity: 0 },
+      ], { duration: 1300, delay: delay + 900, easing: SOFT });
+      built = Math.max(built, delay + 2000);
+    }
+    for (const h of document.querySelectorAll('.col h2, .col .when')) {
+      anim(h, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 700, delay: built - 700 });
+    }
+
+    // 2. Planets light their gates one by one, alternating Design / Personality.
+    const lists = { d: $('dlist'), p: $('plist') };
+    lists.d.textContent = ''; lists.p.textContent = '';
+    $('dwhen').textContent = fmtUtc(chart.designUtc);
+    $('pwhen').textContent = fmtUtc(chart.birthUtc);
+    const drawn = {}, gateTime = {};
+    const START = built - 300, STEP = 115, FLOW = 650;
+    HD.BODIES.forEach((body, i) => {
+      for (const side of ['d', 'p']) {
+        const a = (side === 'd' ? chart.design : chart.personality)[i];
+        const delay = START + (i * 2 + (side === 'p' ? 1 : 0)) * STEP;
+        const row = document.createElement('div');
+        row.className = 'row';
+        const pos = a.deg + '°' + String(a.min).padStart(2, '0') + '′ ' + a.sign + (a.retro ? ' ℞' : '');
+        row.title = (LABEL[body] || body) + ', gate ' + a.gate + ' ' + HD.GATE_NAMES[a.gate] + ', line ' + a.line + (a.retro ? ', retrograde' : '');
+        row.innerHTML = '<span class="glyph" aria-hidden="true">' + GLYPH[body] + '︎</span>' +
+          '<span class="name">' + (LABEL[body] || body) + '<small>' + pos + '</small></span><span class="act">' + a.gate + '.' + a.line + '</span>';
+        lists[side].appendChild(row);
+        anim(row, [{ opacity: 0, transform: side === 'd' ? 'translateX(-12px)' : 'translateX(12px)' }, { opacity: 1, transform: 'none' }], { duration: 600, delay, easing: SOFT });
+
+        const prev = drawn[a.gate];
+        const state = !prev ? side : prev === side ? side : 'pd';
+        if (prev === state) continue;
+        drawn[a.gate] = state;
+        if (gateTime[a.gate] === undefined) gateTime[a.gate] = delay + FLOW;
+        const colour = side === 'd' ? 'var(--design)' : 'var(--personality)';
+        const g = gateEl[a.gate];
+        g.setAttribute('class', 'gate on');
+        anim(g.firstChild, [{ fill: 'var(--bg)' }, { fill: 'var(--personality)' }], { duration: 400, delay });
+        anim(g.lastChild, [{ fill: 'var(--muted)' }, { fill: 'var(--bg)' }], { duration: 400, delay });
+        anim(g, [{ transform: 'scale(1)' }, { transform: 'scale(1.45)' }, { transform: 'scale(1)' }], { duration: 600, delay, easing: EASE_MOVE, fill: 'none' });
+        const [gx, gy] = gateXY[a.gate];
+        fx(el('circle', { class: 'ripple', cx: gx, cy: gy, r: 5, style: 'stroke:' + colour }, gRipple),
+          [{ opacity: 0.8, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(3.4)' }], { duration: 1000, delay, easing: SOFT });
+        (halfPath[a.gate] || []).forEach((pts) => {
+          const add = (cls) => {
+            const p = el('path', { class: 'half ' + cls, d: d(pts) }, gHalves);
+            const L = p.getTotalLength();
+            if (cls !== 'pd') anim(p, [{ strokeDasharray: L, strokeDashoffset: L }, { strokeDasharray: L, strokeDashoffset: 0 }], { duration: FLOW, delay, easing: EASE_MOVE });
+            else anim(p, [{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: delay + FLOW * 0.4 });
+          };
+          if (state === 'pd') { add('d'); add('pd'); } else add(state);
+          const path = sample(pts, 9);
+          fx(el('circle', { class: 'spark', cx: 0, cy: 0, r: 2.8 }, gFx), path.map((q, k) => ({
+            transform: 'translate(' + q[0].toFixed(1) + 'px,' + q[1].toFixed(1) + 'px)',
+            opacity: k === 0 || k === path.length - 1 ? 0 : 1, offset: k / (path.length - 1),
+          })), { duration: FLOW, delay, easing: EASE_MOVE });
+        });
+      }
+    });
+
+    // 3. When both halves meet, light sweeps through the channel and its centers come alive.
+    const centerTime = {};
+    let last = START + 26 * STEP + FLOW;
+    for (const ch of channelEls) {
+      if (!chart.channels.some(([x, y]) => x === ch.a && y === ch.b)) continue;
+      const t = Math.max(gateTime[ch.a], gateTime[ch.b]);
+      const seg = 26;
+      fx(el('path', { class: 'sweep', d: ch.path, 'stroke-dasharray': seg + ' ' + (ch.L + seg) }, gFx), [
+        { strokeDashoffset: seg, opacity: 0 }, { opacity: 1, offset: 0.15 }, { opacity: 1, offset: 0.8 }, { strokeDashoffset: -ch.L, opacity: 0 },
+      ], { duration: 1000, delay: t, easing: EASE_MOVE });
+      for (const c of [HD.GATE_CENTER[ch.a], HD.GATE_CENTER[ch.b]]) centerTime[c] = Math.min(centerTime[c] ?? Infinity, t + 400);
+    }
+    for (const c of chart.defined) {
+      const node = centerEl[c];
+      node.setAttribute('class', 'center def-' + c);
+      const t = centerTime[c];
+      anim(node, [{ fill: 'var(--bg)' }, { fill: getComputedStyle(node).fill }], { duration: 900, delay: t, easing: SOFT });
+      anim(node, [{ transform: 'scale(1)' }, { transform: 'scale(1.05)' }, { transform: 'scale(1)' }], { duration: 900, delay: t, easing: EASE_MOVE, fill: 'none' });
+      fx(el('path', { class: 'ripple ripple-c', d: node.getAttribute('d') }, gRipple),
+        [{ opacity: 0.7, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.25)' }], { duration: 1200, delay: t, easing: SOFT });
+      last = Math.max(last, t + 900);
+    }
+    const FILL = last;
+
+    // 4. Summary, reading and notes.
+    renderSummary(chart, FILL);
+    renderReading(chart, FILL);
+    for (const [node, extra] of [[$('stability'), 500], [$('readtitle'), 550], [document.querySelector('.sources'), 1100], [$('note'), 1150]]) {
+      anim(node, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 700, delay: FILL + extra, easing: SOFT });
+    }
+    svg.setAttribute('aria-label', describe(chart));
+
+    clearTimeout(skipTimer);
+    $('skip').hidden = reduce;
+    skipTimer = setTimeout(() => { $('skip').hidden = true; }, FILL + 1800);
+  }
+
+  function renderSummary(chart, at) {
+    const st = (s) => HD.ORDER.filter((c) => chart.centers[c].state === s).map((c) => HD.CENTER_NAMES[c]);
+    const arrow = (v) => (v.arrow === 'left' ? '← ' : '→ ') + v.name + ': ' + v.label;
+    const [pl, dl] = chart.profile.split('/');
+    const items = [
+      ['Your type', chart.type, 'How your energy works.'],
+      ['Decisions', HDRead.AUTH_PLAIN[chart.authority], 'Called ' + chart.authority + ' authority.'],
+      ['Your role', chart.profileName.replace(' / ', ' and '), 'Called profile ' + chart.profile + '.'],
+      ['Life theme', chart.cross.name.replace(/^.*Cross of /, '').replace(/^the /, '').replace(/^./, (m) => m.toUpperCase()), 'Called the ' + chart.cross.name + '.'],
+      ['Steady in you', chart.defined.length ? chart.defined.length + ' of 9 areas' : 'None',
+        chart.defined.length ? HD.ORDER.filter((c) => chart.centers[c].state === 'defined').map((c) => HD.CENTER_NAMES[c]).join(', ') + '. The rest pick up energy from others.' : 'All areas pick up energy from others.'],
+    ];
+    const adv = $('advanced');
+    const VAR_ABOUT = { Determination: 'how you best take in food and nourishment', Environment: 'the kind of place that suits you',
+      Motivation: 'what truly drives you', Perspective: 'how you naturally see the world' };
+    adv.querySelector('ul').innerHTML = chart.variables.map((v) => '<li>' + v.name + ' (' + VAR_ABOUT[v.name] + '): ' + v.label +
+      ', arrow pointing ' + v.arrow + ' (' + (v.arrow === 'left' ? 'focused, active' : 'open, receptive') + ').</li>').join('');
+    const box = $('reading');
+    box.textContent = '';
+    items.forEach(([k, v, sub], i) => {
+      const div = document.createElement('div');
+      div.innerHTML = '<dt>' + k + '</dt><dd>' + v + (sub ? '<small>' + sub + '</small>' : '') + '</dd>';
+      box.appendChild(div);
+      anim(div, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 700, delay: at + 100 + i * 70, easing: SOFT });
+    });
+  }
+
+  function renderReading(chart, at) {
+    const body = $('readbody');
+    body.textContent = '';
+    let deeper = null;
+    HDRead.reading(chart).forEach((s, i) => {
+      if (s.deeper && !deeper) {
+        deeper = document.createElement('details');
+        deeper.className = 'deeper';
+        deeper.innerHTML = '<summary>Go deeper: your single gates</summary>';
+        body.appendChild(deeper);
+      }
+      const sec = document.createElement('section');
+      const h = document.createElement('h3'); h.textContent = s.heading; sec.appendChild(h);
+      if (s.what) { const w = document.createElement('p'); w.className = 'what'; w.textContent = s.what; sec.appendChild(w); }
+      for (const t of s.paragraphs) { const p = document.createElement('p'); p.textContent = t; sec.appendChild(p); }
+      if (s.items && s.items.length) {
+        const ul = document.createElement('ul');
+        if (s.items.length > 6) ul.className = 'two';
+        for (const t of s.items) { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); }
+        sec.appendChild(ul);
+      }
+      (s.deeper ? deeper : body).appendChild(sec);
+      anim(sec, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 700, delay: at + 600 + i * 70, easing: SOFT });
+    });
+  }
+
+  // Text version of the chart for screen readers.
+  function describe(c) {
+    const names = (s) => HD.ORDER.filter((x) => c.centers[x].state === s).map((x) => HD.CENTER_NAMES[x]);
+    return 'Bodygraph. ' + c.type + ', ' + c.authority + ' authority, profile ' + c.profile + ', ' + c.definition + '. ' +
+      'Defined centers: ' + (list(names('defined')) || 'none') + '. ' +
+      'Channels: ' + (c.channels.map((x) => HD.channelKey(x[0], x[1]) + ' ' + HDRead.CHANNEL[HD.channelKey(x[0], x[1])][0]).join(', ') || 'none') + '. ' +
+      c.cross.name + '.';
+  }
+
+  // Tap, hover or focus a gate, center or channel to explain it.
+  let selected = null;
+  function showInfo(target) {
+    const info = $('info');
+    if (selected) selected.classList.remove('selected');
+    selected = null;
+    if (!target || !current) { info.textContent = 'Tap or hover over a center, gate or channel to see what it means.'; return; }
+    const c = current;
+    const who = (g) => [...c.design.map((a) => ['Design', a]), ...c.personality.map((a) => ['Personality', a])]
+      .filter(([, a]) => a.gate === g).map(([s, a]) => s + ' ' + (LABEL[a.body] || a.body) + ' (' + a.gate + '.' + a.line + ')');
+    let html;
+    if (target.gate) {
+      const g = target.gate, by = who(g);
+      html = '<strong>Gate ' + g + ' · ' + HD.GATE_NAMES[g] + '</strong><br>' + HDRead.GATE[g].replace(/^./, (m) => m.toUpperCase()) + '. In the ' +
+        HD.CENTER_NAMES[HD.GATE_CENTER[g]] + ' center. ' + (by.length ? 'Active through ' + by.join(', ') + ' (red is your Design, black your Personality).' : 'Not active in your chart.');
+    } else if (target.center) {
+      const k = target.center, st = c.centers[k];
+      selected = centerEl[k]; selected.classList.add('selected');
+      const word = st.state === 'defined' ? 'coloured in (defined)' : st.state === 'open' ? 'white, fully open' : 'white (undefined)';
+      html = '<strong>' + HD.CENTER_NAMES[k] + ' · ' + word + '</strong><br>' +
+        'The center of ' + CENTER_THEME[k] + '. ' + (st.gates.length ? 'Active gates: ' + st.gates.map((g) => g + ' ' + HD.GATE_NAMES[g]).join(', ') + '. ' : '') +
+        (st.state === 'defined' ? 'This works the same way in you every day.' : 'It picks up energy from others. Ask yourself: ' + HDRead.QUESTION[k]);
+    } else {
+      const key = target.channel, [a, b] = key.split('-').map(Number), [name, keynote] = HDRead.CHANNEL[key];
+      const on = c.channels.some(([x, y]) => HD.channelKey(x, y) === key);
+      const has = [a, b].filter((g) => c.active[g]);
+      html = '<strong>' + name + ' channel · ' + key + '</strong><br>' + keynote.charAt(0).toUpperCase() + keynote.slice(1) + '. ' + HDRead.CIRCUIT_PLAIN[HD.CIRCUIT[key]] + '. ' +
+        (on ? 'Fully coloured in your chart: a fixed part of you.' : has.length ? 'You have gate ' + has[0] + ' only, so you may feel drawn to people with gate ' + (has[0] === a ? b : a) + '.' : 'Not active in your chart.');
+    }
+    info.innerHTML = html;
+  }
+  const targetOf = (e) => {
+    const g = e.target.closest('.gate'); if (g) return { gate: +g.dataset.gate };
+    const h = e.target.closest('.hit'); if (h) return { channel: h.dataset.channel };
+    const c = e.target.closest('.cgroup'); if (c) return { center: c.dataset.center };
+    return null;
+  };
+  svg.addEventListener('click', (e) => { const t = targetOf(e); if (t) showInfo(t); });
+  svg.addEventListener('focusin', (e) => { const t = targetOf(e); if (t) showInfo(t); });
+  svg.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('.gate')) { e.preventDefault(); showInfo(targetOf(e)); } });
+  if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    svg.addEventListener('pointerover', (e) => { const t = targetOf(e); if (t) showInfo(t); });
+  }
+
+  // Birth place: address search on OpenStreetMap (Photon); the time zone follows from the exact location.
+  // If the search service cannot be reached, fall back to the bundled list of cities.
+  // Birth address with type-ahead. Online: addresses from OpenStreetMap (Photon), narrowing as you type.
+  // Without a connection (as in a preview): the part after the last comma is matched against a
+  // built-in list of 127,000 towns, and whatever comes before it (street and number) is kept.
+  const place = $('place'), placeList = $('placelist'), placeInfo = $('placeinfo');
+  const fold = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const CITY_KEYS = HD_CITIES.map((c) => fold(c[0]));
+  let matches = [], sel = -1, geoOffline = false, searchTimer, searchCtl;
+  const closeList = () => { placeList.hidden = true; place.setAttribute('aria-expanded', 'false'); sel = -1; };
+  const where = (m) => (m.lat !== undefined ? m.lat.toFixed(4) + ', ' + m.lon.toFixed(4) + ' · ' : '') + 'time zone ' + m.tz;
+  const pick = (m) => {
+    place.value = m.value || m.label;
+    $('tz').value = m.tz;
+    placeInfo.textContent = (m.exact ? 'Address found: ' : 'Town: ') + where(m) + '.';
+    closeList();
+  };
+  const showList = () => {
+    placeList.textContent = '';
+    matches.forEach((m, i) => {
+      const li = document.createElement('li');
+      li.id = 'place-' + i; li.setAttribute('role', 'option'); li.setAttribute('aria-selected', String(i === sel));
+      const top = document.createElement('span'); top.textContent = m.label;
+      const sub = document.createElement('small'); sub.textContent = m.sub;
+      li.append(top, sub);
+      li.addEventListener('mousedown', (e) => { e.preventDefault(); pick(m); });
+      placeList.appendChild(li);
+    });
+    placeList.hidden = !matches.length;
+    place.setAttribute('aria-expanded', String(!!matches.length));
+  };
+  let PLACES = null, PLACE_KEYS = null, placesLoading = null;
+  const countryName = (() => { try { const dn = new Intl.DisplayNames(['en'], { type: 'region' }); return (cc) => dn.of(cc) || cc; } catch (e) { return (cc) => cc; } })();
+  const loadPlaces = () => placesLoading || (placesLoading = fetch('places.json').then((r) => r.json()).then((data) => {
+    PLACES = data; PLACE_KEYS = data.rows.map((r) => fold(r[0]));
+  }).catch(() => {}));
+  place.addEventListener('focus', loadPlaces, { once: true });
+  const townMatches = (q) => {
+    q = fold(q.trim());
+    const out = [];
+    if (q.length < 2) return out;
+    if (PLACES) {
+      const rows = PLACES.rows;
+      for (let i = 0; i < rows.length && out.length < 8; i++) if (PLACE_KEYS[i].startsWith(q)) out.push(rows[i]);
+      for (let i = 0; i < rows.length && out.length < 8; i++) if (!PLACE_KEYS[i].startsWith(q) && PLACE_KEYS[i].includes(q)) out.push(rows[i]);
+      return out.map((r) => ({ label: r[0] + ', ' + countryName(r[1]), sub: PLACES.zones[r[2]] + ' · ' + r[3].toFixed(2) + ', ' + r[4].toFixed(2), tz: PLACES.zones[r[2]], lat: r[3], lon: r[4] }));
+    }
+    for (let i = 0; i < HD_CITIES.length && out.length < 8; i++) if (CITY_KEYS[i].startsWith(q)) out.push(HD_CITIES[i]);
+    return out.map((c) => ({ label: c[0] + ', ' + c[2], sub: HD_ZONES[c[3]], tz: HD_ZONES[c[3]] }));
+  };
+  // Offline: "Kerkstraat 12, Doesb" keeps "Kerkstraat 12" and offers towns starting with "Doesb".
+  const offlineMatches = (raw) => {
+    const parts = raw.split(',');
+    const town = parts.length > 1 ? parts[parts.length - 1] : raw;
+    const before = parts.length > 1 ? parts.slice(0, -1).join(',').trim() : '';
+    return townMatches(town).map((m) => ({ ...m, value: (before ? before + ', ' : '') + m.label }));
+  };
+  async function addressMatches(q) {
+    searchCtl?.abort();
+    searchCtl = new AbortController();
+    const res = await fetch('https://photon.komoot.io/api/?limit=7&lang=en&q=' + encodeURIComponent(q), { signal: searchCtl.signal });
+    if (!res.ok) throw new Error('search failed');
+    return (await res.json()).features.map((f) => {
+      const pr = f.properties, [lon, lat] = f.geometry.coordinates, tz = tzlookup(lat, lon);
+      const streetLine = pr.street ? pr.street + (pr.housenumber ? ' ' + pr.housenumber : '') : '';
+      const name = pr.name && pr.name !== streetLine ? pr.name : '';
+      const town = pr.city || pr.town || pr.village || pr.county || '';
+      const label = [name, streetLine, [pr.postcode, town !== name ? town : ''].filter(Boolean).join(' ')].filter(Boolean).join(', ') || pr.name;
+      return { label, sub: [pr.country, tz].filter(Boolean).join(' · '), value: [label, pr.country].filter(Boolean).join(', '), lat, lon, tz, exact: !!streetLine };
+    });
+  }
+  const offlineHint = 'Address suggestions need the online address service, which is not reachable here. Type the street and number, a comma, then the town, and pick the town from the list.';
+  place.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    const q = place.value.trim();
+    if (geoOffline) { loadPlaces().then(() => { matches = offlineMatches(place.value); sel = -1; showList(); }); return; }
+    if (q.length < 3) { closeList(); return; }
+    searchTimer = setTimeout(async () => {
+      try { matches = await addressMatches(q); }
+      catch (e) {
+        if (e.name === 'AbortError') return;
+        geoOffline = true;
+        placeInfo.textContent = offlineHint;
+        await loadPlaces();
+        matches = offlineMatches(place.value);
+      }
+      sel = -1; showList();
+    }, 250);
+  });
+  place.addEventListener('keydown', (e) => {
+    if (placeList.hidden) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      sel = (sel + (e.key === 'ArrowDown' ? 1 : -1) + matches.length) % matches.length;
+      showList(); place.setAttribute('aria-activedescendant', 'place-' + sel);
+    } else if (e.key === 'Enter' && sel >= 0) { e.preventDefault(); pick(matches[sel]); }
+    else if (e.key === 'Escape') closeList();
+  });
+  place.addEventListener('blur', closeList);
+
+  // Birth time check: how long before and after the entered time the chart stays the same.
+  // s: result of HD.stability, worked out before the animation starts (about a tenth of a second).
+  function showStability(s, localMinutes) {
+    const out = $('stability');
+    if (!s) { out.hidden = true; return; }
+    const clock = (m) => { m = ((m % 1440) + 1440) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+    const label = (c) => c ? (c.body.replace('Node', ' Node') + ' (' + c.side + ') moves from ' + c.from + ' to ' + c.to) : '';
+    const from = localMinutes - s.before.minutes, to = localMinutes + s.after.minutes;
+    const capped = (x) => x.minutes >= s.maxMin;
+    const margin = Math.min(s.before.minutes, s.after.minutes);
+    // margin = minutes the time can move without any change; the first change comes one minute later.
+    const step = margin + 1;
+    const verdict = margin >= 30 ? 'Your birth time can be off by up to ' + margin + ' minutes without changing this chart.'
+      : margin >= 10 ? 'If your birth time is off by ' + step + ' minutes, this chart changes. Check the time if you can.'
+      : margin >= 1 ? 'This chart is sensitive: if your birth time is off by ' + step + ' minutes, it changes. An exact birth time matters here.'
+      : 'Your birth time sits right on a boundary: one minute ' + (s.before.minutes === 0 && s.after.minutes === 0 ? 'earlier or later' : s.after.minutes === 0 ? 'later' : 'earlier') + ' already changes this chart. An exact birth time matters here.';
+    out.innerHTML = '';
+    const strong = document.createElement('strong');
+    strong.textContent = verdict;
+    out.append(strong, document.createElement('br'));
+    if (s.before.minutes > 0 && s.after.minutes > 0) {
+      out.append('The chart stays the same from ' + (capped(s.before) ? 'before ' : '') + clock(from) + ' to ' + clock(to) + (capped(s.after) ? ' or later' : '') + '. ');
+    }
+    const changes = [];
+    const at = (x, dir) => x.minutes === 0 ? 'One minute ' + dir : dir.charAt(0).toUpperCase() + dir.slice(1) + ' than ' + clock(dir === 'earlier' ? from : to);
+    if (s.before.change) changes.push(at(s.before, 'earlier') + ', the ' + label(s.before.change) + '.');
+    if (s.after.change) changes.push(at(s.after, 'later') + ', the ' + label(s.after.change) + '.');
+    out.append(changes.join(' '));
+  }
+
+  let current;
+  function calculate() {
+    const err = $('error');
+    err.hidden = true;
+    const date = $('date').value, time = $('time').value;
+    const tz = $('isutc').checked ? 'UTC' : $('tz').value.trim();
+    try {
+      if (!date || !time) throw new Error('Enter a birth date and time.');
+      try { new Intl.DateTimeFormat('en', { timeZone: tz }); } catch (e) {
+        throw new Error('“' + tz + '” is not a time zone. Pick a birth place, or a zone from the list such as Europe/Amsterdam.');
+      }
+      const [y, mo, dd] = date.split('-').map(Number);
+      const [h, mi] = time.split(':').map(Number);
+      if (y < 1801 || y > 2199) throw new Error('Charts can be calculated for births from 1801 to 2199.');
+      const utc = HD.zonedToUtc(y, mo, dd, h, mi, tz);
+      const chart = HD.chart(EPH, utc, { motion: true });
+      let stable = null;
+      try { stable = HD.stability(EPH, utc); } catch (e) { /* within three hours of the table limits */ }
+      $('start').hidden = true;
+      for (const id of ['chart', 'reading', 'stability', 'readout', 'advanced', 'note', 'replay']) $(id).hidden = false;
+      $('save').hidden = window.self !== window.top;   // downloads only work on the real site, not inside a preview frame
+      render(chart);
+      showStability(stable, h * 60 + mi);
+      const chartEl = $('chart');
+      if (chartEl.getBoundingClientRect().top > innerHeight * 0.5) chartEl.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    } catch (e) {
+      err.textContent = e.message;
+      err.hidden = false;
+    }
+  }
+
+  // Save the chart as a PNG: copy computed styles into a standalone SVG and draw it on a canvas.
+  async function saveImage() {
+    running.forEach((a) => a.finish());
+    const clone = svg.cloneNode(true);
+    const src = svg.querySelectorAll('*'), dst = clone.querySelectorAll('*');
+    const props = ['fill', 'stroke', 'stroke-width', 'stroke-opacity', 'stroke-dasharray', 'opacity', 'font-family', 'font-size', 'font-weight', 'text-anchor', 'dominant-baseline'];
+    src.forEach((n, i) => { const cs = getComputedStyle(n); dst[i].setAttribute('style', props.map((p) => p + ':' + cs.getPropertyValue(p)).join(';')); });
+    const [vx, vy, vw, vh] = svg.getAttribute('viewBox').split(' ').map(Number);
+    const bg = el('rect', { x: vx, y: vy, width: vw, height: vh, fill: '#fffdfb' });
+    clone.insertBefore(bg, clone.firstChild);
+    clone.setAttribute('xmlns', NS); clone.setAttribute('width', vw * 3); clone.setAttribute('height', vh * 3);
+    const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml' }));
+    const img = new Image();
+    img.onload = () => {
+      const cv = document.createElement('canvas'); cv.width = vw * 3; cv.height = vh * 3;
+      cv.getContext('2d').drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      cv.toBlob((blob) => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = 'bodygraph.png'; a.click();
+      });
+    };
+    img.src = url;
+  }
+
+  $('form').addEventListener('submit', (e) => { e.preventDefault(); calculate(); });
+  $('replay').addEventListener('click', () => current && render(current));
+  $('skip').addEventListener('click', () => { running.forEach((a) => a.finish()); $('skip').hidden = true; });
+  $('save').addEventListener('click', saveImage);
+
+  // Open with a birth already filled in: window.HD_PREFILL = { date, time, tz, place }, or the same as
+  // URL parameters, e.g. ?date=1988-03-21&time=08:15&tz=Europe/Amsterdam&place=Amsterdam (or after #).
+  const pre = window.HD_PREFILL || Object.fromEntries(new URLSearchParams(location.search.slice(1) || location.hash.slice(1)));
+  if (pre.date && pre.time) {
+    $('date').value = pre.date; $('time').value = pre.time;
+    if (pre.place) place.value = pre.place;
+    if (pre.tz === 'UTC') $('isutc').checked = true; else if (pre.tz) $('tz').value = pre.tz;
+    calculate();
+  }
+})();
+</script>
