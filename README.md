@@ -1,13 +1,18 @@
 # Human Design Bodygraph skill
 
+**Reference-level accuracy, tested on 10,000 charts, with the results published.**
+
 An Agent Skill for Claude (and other agents that read `SKILL.md`) that calculates a Human Design chart from a
 birth date, time and place and explains it in plain language. It can also compare two charts and make an
 animated bodygraph page that assembles itself.
 
 ![The bodygraph page](docs/screenshot.png)
 
-- **Accurate.** Planet positions match Swiss Ephemeris (NASA JPL DE431) to within one arcsecond. In a test
-  of 10,000 random births, 9,998 charts were identical in every gate and line. See
+- **Accurate, and tested.** Planet positions match Swiss Ephemeris with NASA JPL DE431, the reference behind
+  most Human Design software, to within one arcsecond. In a test of 10,000 random births, 9,998 charts were
+  identical in every gate and line (the other 2 differed by one line of the Design Moon). In the same kind of
+  test, the open-source engine pyhd had a wrong line in 0.65% of charts and called about 1 in 10 charts
+  Generator where Jovian Archive's rules give Manifesting Generator. Full method and numbers:
   [accuracy](skills/human-design-bodygraph/references/accuracy.md).
 - **Complete.** Type, strategy, authority, profile, definition, centers (defined, undefined, open), channels,
   all 26 activations with colour, tone and base, incarnation cross, Variables, and a birth-time check that

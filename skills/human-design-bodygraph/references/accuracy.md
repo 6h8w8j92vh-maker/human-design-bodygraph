@@ -22,6 +22,10 @@
 A line is 3,375 arcseconds wide. Result: 9,998 of 10,000 charts identical in every gate and line; 2 differed
 by one line of the Design Moon. The Design moment was never more than 0.8 seconds off.
 
+For comparison, on 2,000 of the same births: pyhd (Swiss Ephemeris in Moshier mode) had at least one
+different line in 13 charts (0.65%), and called 202 charts Generator that have a motor, including the
+Sacral itself, connected to the Throat, which makes them Manifesting Generators under Jovian Archive's rules.
+
 ## Chart rules (Jovian Archive)
 - Defined center: part of at least one complete channel. Undefined: has gates but no channel. Open: no gates.
 - Reflector: no defined center. Generator: Sacral defined. Manifesting Generator: Sacral defined and a motor
